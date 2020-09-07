@@ -1,0 +1,6 @@
+ply
+six
+requests-cache
+ruamel.std.zipfile
+ConfigParser
+argparse
