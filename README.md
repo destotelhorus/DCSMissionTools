@@ -20,9 +20,9 @@ positional arguments:
 optional arguments:
   -h, --help          show this help message and exit
   -C, --compress-ids  Compresses the unit- and groupIds in the mission as to
-                      avoid theirvalues growing too large
-  -F1, --fix-eplrs    Fixes wrongful links to groups for EPLRS waypoint
-                      settings. Will onlywork if used together with -C
+                      avoid their values growing too large
+  -F1, --fix-eplrs    Fixes incorrect links to groups for EPLRS waypoint settings.
+                      Will only work if used together with -C
   -v, --verbose       Give more feedback on what is being worked on
 ```
 

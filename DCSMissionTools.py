@@ -8,7 +8,7 @@ parser.add_argument('missionfile', help='mission file to work on', nargs='+')
 parser.add_argument('-C', '--compress-ids', help='Compresses the unit- and groupIds in the mission as to avoid their '
                                                  'values growing too large',
                     action='store_true', required=False)
-parser.add_argument('-F1', '--fix-eplrs', help='Fixes wrongful links to groups for EPLRS waypoint settings. Will only '
+parser.add_argument('-F1', '--fix-eplrs', help='Fixes incorrect links to groups for EPLRS waypoint settings. Will only '
                                                'work if used together with -C',
                               action='store_true', required=False)
 
