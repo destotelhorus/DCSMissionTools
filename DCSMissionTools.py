@@ -5,6 +5,8 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Assorted mission tools for digital combat simulator.')
 parser.add_argument('missionfile', help='mission file to work on', nargs='+')
+parser.add_argument('-D', '--dump-mission', help='Dumps the mission LUA out on STDOUT and exits',
+ nargs='?')
 parser.add_argument('-C', '--compress-ids', help='Compresses the unit- and groupIds in the mission as to avoid their '
                                                  'values growing too large',
                     action='store_true', required=False)
@@ -24,7 +26,7 @@ def printv(obj):
 def compressIds(mission):
     unitids = dict()
     groupids = dict()
-    unitIndex = 1
+    unitIndex = 10000
     groupIndex = 1
     print("compressing ids!")
     print("beginning analysis")
@@ -50,6 +52,16 @@ def compressIds(mission):
                         unitsingroup.append(unit["unitId"])
 
                     for point_idx, point in group["route"]["points"].items():
+                        if "linkUnit" in point:
+                            printv("group {0} has a waypoint linked to a unit {1} that needs rewriting".format(
+                                group["groupId"],
+                                point["linkUnit"]
+                            ))
+                        if "helipadId" in point:
+                            printv("group {0} has a waypoint linked to a helipad unit {1} that needs rewriting".format(
+                                group["groupId"],
+                                point["helipadId"]
+                            ))
                         if not "task" in point:
                             continue
                         for task_idx, task in point["task"]["params"]["tasks"].items():
@@ -91,6 +103,34 @@ def compressIds(mission):
                             unit["unitId"] = unitids[unit["unitId"]]
 
                     for point_idx, point in group["route"]["points"].items():
+                        if "linkUnit" in point:
+                            if point["linkUnit"] in unitids:
+                                print("group {0} has a waypoint linked to a unit {1} that was rewritten to {2}".format(
+                                    group["groupId"],
+                                    point["linkUnit"],
+                                    unitids[point["linkUnit"]]
+                                ))
+                                point["linkUnit"] = unitids[point["linkUnit"]]
+                            else:
+                                print("group {0} has a waypoint linked to a unit {1} that wasn't rewritten, as I the "
+                                       "source unit wasn't found. This is most likely going to result in a broken mission!".format(
+                                    group["groupId"],
+                                    point["linkUnit"]
+                                ))
+                        if "helipadId" in point:
+                            if point["helipadId"] in unitids:
+                                print("group {0} has a waypoint linked to a helipad unit {1} that was rewritten to {2}".format(
+                                    group["groupId"],
+                                    point["helipadId"],
+                                    unitids[point["helipadId"]]
+                                ))
+                                point["helipadId"] = unitids[point["helipadId"]]
+                            else:
+                                print("group {0} has a waypoint linked to a helipad unit {1} that wasn't rewritten, as I the "
+                                      "source unit wasn't found. This is most likely going to result in a broken mission!".format(
+                                    group["groupId"],
+                                    point["helipadId"]
+                                ))
                         if not "task" in point:
                             continue
                         for task_idx, task in point["task"]["params"]["tasks"].items():
@@ -180,13 +220,25 @@ def rewriteTaskUnitId(group, task, unitids, unitsingroup):
 if __name__ == '__main__':
     for missionfile in args.missionfile:
         MIZ = MIZFile(missionfile, False)
-        print("Opening mission {}".format(missionfile))
+        if args.dump_mission is None:
+            print("Opening mission {}".format(missionfile))
+
         mission = MIZ.getMission()
 
+        if not args.dump_mission is None:
+            if args.dump_mission == '-':
+                print(MIZ.getMissionLUA())
+            else:
+                output = open(args.dump_mission, "wb")
+                output.write(MIZ.getMissionLUA())
+                output.close()
+            break
         if args.compress_ids:
             compressIds(mission)
 
         print("Committing changes to mission {}".format(missionfile))
         MIZ.setMission(mission)
         MIZ.commit()
-    print("done")
+
+    if args.dump_mission is None:
+        print("done")
