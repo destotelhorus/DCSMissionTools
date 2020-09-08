@@ -13,6 +13,7 @@ class MIZFile(object):
     MIZfilename = ''
     readonly = True
     missionData = None
+    missionLua = None
     theatre = None
 
     def __init__(self, filename, readonly=True):
@@ -27,13 +28,17 @@ class MIZFile(object):
         mizfilehandle.append('mission', lua.encode(self.missionData)[1:-1].encode('UTF-8'))
         mizfilehandle.write_to_file(self.MIZfilename)
 
+    def getMissionLUA(self):
+        if not self.missionLua:
+            mizfilehandle = ZipFile(self.MIZfilename, mode='r')
+            missionfilehandle = mizfilehandle.open('mission', 'r')
+            self.missionLua = missionfilehandle.read()
+            missionfilehandle.close()
+        return self.missionLua
+
     def getMission(self):
-        if self.missionData:
-            return self.missionData['mission']
-        mizfilehandle = ZipFile(self.MIZfilename, mode='r')
-        missionfilehandle = mizfilehandle.open('mission', 'r')
-        self.missionData = lua.decode('{' + missionfilehandle.read().decode('UTF-8') + '}')
-        missionfilehandle.close()
+        if not self.missionData:
+            self.missionData = lua.decode('{' + self.getMissionLUA().decode('UTF-8') + '}')
         return self.missionData['mission']
 
     def setMission(self, missiondata):
