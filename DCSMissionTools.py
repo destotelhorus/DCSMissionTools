@@ -5,7 +5,9 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Assorted mission tools for digital combat simulator.')
 parser.add_argument('missionfile', help='mission file to work on', nargs='+')
-parser.add_argument('-D', '--dump-mission', help='Dumps the mission LUA out on STDOUT and exits',
+parser.add_argument('-D', '--dump-mission', help='Dumps the mission LUA of the first missionfile out to the specified '
+                                                 'file, or use "-" for STDOUT. This will prevent any other action from '
+                                                 'being taken!',
  nargs='?')
 parser.add_argument('-C', '--compress-ids', help='Compresses the unit- and groupIds in the mission as to avoid their '
                                                  'values growing too large',
@@ -220,7 +222,7 @@ def rewriteTaskUnitId(group, task, unitids, unitsingroup):
 if __name__ == '__main__':
     for missionfile in args.missionfile:
         MIZ = MIZFile(missionfile, False)
-        if args.dump_mission is None:
+        if args.dump_mission is None and not args.dump_mission == '-':
             print("Opening mission {}".format(missionfile))
 
         mission = MIZ.getMission()
@@ -229,6 +231,7 @@ if __name__ == '__main__':
             if args.dump_mission == '-':
                 print(MIZ.getMissionLUA())
             else:
+                print("Saving mission (LUA) to file {0}".format(args.dump_mission))
                 output = open(args.dump_mission, "wb")
                 output.write(MIZ.getMissionLUA())
                 output.close()
@@ -240,5 +243,5 @@ if __name__ == '__main__':
         MIZ.setMission(mission)
         MIZ.commit()
 
-    if args.dump_mission is None:
+    if args.dump_mission is None and not args.dump_mission == '-':
         print("done")
