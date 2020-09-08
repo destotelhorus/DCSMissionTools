@@ -29,7 +29,7 @@ def compressIds(mission):
     unitids = dict()
     groupids = dict()
     unitIndex = 10000
-    groupIndex = 1
+    groupIndex = 1000
     print("compressing ids!")
     print("beginning analysis")
     for coalition_idx, coalition in mission["coalition"].items():
