@@ -9,6 +9,8 @@ parser.add_argument('-D', '--dump-mission', help='Dumps the mission LUA of the f
                                                  'file, or use "-" for STDOUT. This will prevent any other action from '
                                                  'being taken!',
  nargs='?')
+parser.add_argument('-M', '--max-ids', help='Displays the current maximum ids for groups and units.',
+                    action='store_true', required=False)
 parser.add_argument('-C', '--compress-ids', help='Compresses the unit- and groupIds in the mission as to avoid their '
                                                  'values growing too large',
                     action='store_true', required=False)
@@ -24,6 +26,30 @@ args = parser.parse_args()
 def printv(obj):
     if args.verbose:
         print(obj)
+
+def printMaxIds(mission):
+    maxUnitId = 0
+    maxGroupId = 0
+    print("beginning analysis")
+    for coalition_idx, coalition in mission["coalition"].items():
+        printv("analysing coalition: {}".format(coalition_idx))
+        for country_idx, country in coalition["country"].items():
+            printv("analysing country: {}".format(country["name"]))
+            for unittype in ["helicopter", "ship", "plane", "vehicle", "static"]:
+                printv("analysing unittype: {}".format(unittype))
+                if not unittype in country:
+                    printv("unittype-key {} not found".format(unittype))
+                    continue
+                for group_idx, group in country[unittype]["group"].items():
+
+                    printv("analysing group {}".format(group["groupId"]))
+                    if ( group["groupId"] > maxGroupId ):
+                        maxGroupId = group["groupId"]
+                    for unit_idx, unit in group["units"].items():
+                        printv("analysing unit {}".format(unit["unitId"]))
+                        if ( unit["unitId"] > maxUnitId ):
+                            maxUnitId = unit["unitId"]
+    print("the highest group id is {0}, the highest unit id is {1}".format(maxGroupId, maxUnitId))
 
 def compressIds(mission):
     unitids = dict()
@@ -222,6 +248,8 @@ def rewriteTaskUnitId(group, task, unitids, unitsingroup):
 if __name__ == '__main__':
     for missionfile in args.missionfile:
         MIZ = MIZFile(missionfile, False)
+        mission_changed = False
+
         if args.dump_mission is None and not args.dump_mission == '-':
             print("Opening mission {}".format(missionfile))
 
@@ -236,12 +264,18 @@ if __name__ == '__main__':
                 output.write(MIZ.getMissionLUA())
                 output.close()
             break
+        if args.max_ids:
+            printMaxIds(mission)
         if args.compress_ids:
             compressIds(mission)
+            mission_changed = True
 
-        print("Committing changes to mission {}".format(missionfile))
-        MIZ.setMission(mission)
-        MIZ.commit()
+        if mission_changed:
+            print("Committing changes to mission {}".format(missionfile))
+            MIZ.setMission(mission)
+            MIZ.commit()
+            print("max-ids after changes")
+            printMaxIds(mission)
 
     if args.dump_mission is None and not args.dump_mission == '-':
         print("done")
