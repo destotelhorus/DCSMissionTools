@@ -1,5 +1,5 @@
 import os
-from shutil import copyfile
+from STMFile import STMFile
 from MIZFile import MIZFile
 import argparse
 
@@ -10,6 +10,9 @@ parser.add_argument('-D', '--dump-mission', help='Dumps the mission LUA of the f
                                                  'being taken!',
  nargs='?')
 parser.add_argument('-M', '--max-ids', help='Displays the current maximum ids for groups and units.',
+                    action='store_true', required=False)
+parser.add_argument('-F', '--filter-nonclients', help='Filters out non-client units by removing them. Empty groups will '
+                                                      'also be removed.',
                     action='store_true', required=False)
 parser.add_argument('-C', '--compress-ids', help='Compresses the unit- and groupIds in the mission as to avoid their '
                                                  'values growing too large',
@@ -245,13 +248,65 @@ def rewriteTaskUnitId(group, task, unitids, unitsingroup):
         ))
         task["params"]["action"]["params"]["unitId"] = unitids[task["params"]["action"]["params"]["unitId"]]
 
-if __name__ == '__main__':
-    for missionfile in args.missionfile:
-        MIZ = MIZFile(missionfile, False)
-        mission_changed = False
+def removeNonClientUnits(mission):
+    print("removing non-client units!")
+    print("beginning analysis")
+    for coalition_idx, coalition in mission["coalition"].items():
+        printv("analysing coalition: {}".format(coalition_idx))
+        for country_idx, country in coalition["country"].items():
+            printv("analysing country: {}".format(country["name"]))
+            for unittype in ["helicopter", "ship", "plane", "vehicle", "static"]:
+                printv("analysing unittype: {}".format(unittype))
+                if not unittype in country:
+                    printv("unittype-key {} not found".format(unittype))
+                    continue
 
-        if args.dump_mission is None and not args.dump_mission == '-':
-            print("Opening mission {}".format(missionfile))
+                groupsToBeRemoved = []
+                for group_idx, group in country[unittype]["group"].items():
+                    printv("analysing group {}".format(group["groupId"]))
+
+                    numClientUnits = 0
+                    clientsToBeRemoved = []
+                    for unit_idx, unit in group["units"].items():
+                        printv("analysing unit {}".format(unit["unitId"]))
+                        if not 'skill' in unit or not unit["skill"] == "Client":
+                            print("flagging unit {} to be removed as it's not a client".format(unit["unitId"]))
+                            clientsToBeRemoved.append(unit_idx)
+                        else:
+                            print("found client {}".format(unit["unitId"]))
+                            numClientUnits += 1
+
+                    for unit_idx in reversed(clientsToBeRemoved):
+                        print("removing unit with technical index {}.".format(unit_idx))
+                        del group["units"][unit_idx]
+
+                    if numClientUnits == 0:
+                        printv("flagging group {} to be removed as it has no client-units (anymore)".format(group["groupId"]))
+                        groupsToBeRemoved.append(group_idx)
+
+                for group_idx in reversed(groupsToBeRemoved):
+                    printv("removing group with technical index {}.".format(group_idx))
+                    del country[unittype]["group"][group_idx]
+
+if __name__ == '__main__':
+    muteOutput = not (args.dump_mission is None and not args.dump_mission == '-')
+
+    for missionfile in args.missionfile:
+        extension = os.path.splitext(missionfile)[1].lower()
+        if extension == '.stm':
+            if not muteOutput:
+                print("Opening template {}".format(missionfile))
+            MIZ = STMFile(missionfile, False)
+        elif extension == '.miz':
+            if not muteOutput:
+                print("Opening mission {}".format(missionfile))
+            MIZ = MIZFile(missionfile, False)
+        else:
+            if not muteOutput:
+                print("Skipped input missionfile {} because it's extension doesn't match STM or MIZ".format(missionfile))
+            continue
+
+        mission_changed = False
 
         mission = MIZ.getMission()
 
@@ -266,6 +321,9 @@ if __name__ == '__main__':
             break
         if args.max_ids:
             printMaxIds(mission)
+        if args.filter_nonclients:
+            removeNonClientUnits(mission)
+            mission_changed = True
         if args.compress_ids:
             compressIds(mission)
             mission_changed = True
@@ -274,8 +332,9 @@ if __name__ == '__main__':
             print("Committing changes to mission {}".format(missionfile))
             MIZ.setMission(mission)
             MIZ.commit()
-            print("max-ids after changes")
-            printMaxIds(mission)
+            if args.max_ids:
+                print("max-ids after changes")
+                printMaxIds(mission)
 
-    if args.dump_mission is None and not args.dump_mission == '-':
+    if not muteOutput:
         print("done")
