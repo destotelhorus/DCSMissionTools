@@ -10,25 +10,29 @@
 
 ## Help
 ```
-usage: DCSMissionTools.py [-h] [-D [DUMP_MISSION]] [-C] [-F1] [-v]
-                          missionfile [missionfile ...]
-
-Assorted mission tools for digital combat simulator.
-
-positional arguments:
-  missionfile           mission file to work on
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -D [DUMP_MISSION], --dump-mission [DUMP_MISSION]
-                        Dumps the mission LUA of the first missionfile out to
-                        the specified file, or use "-" for STDOUT. This will
-                        prevent any other action from being taken!
-  -C, --compress-ids    Compresses the unit- and groupIds in the mission as to
-                        avoid their values growing too large
-  -F1, --fix-eplrs      Fixes incorrect links to groups for EPLRS waypoint
-                        settings. Will only work if used together with -C
-  -v, --verbose         Give more feedback on what is being worked on
+usage: DCSMissionTools.py [-h] [-D [DUMP_MISSION]] [-M] [-F] [-C] [-F1] [-v]
+                           missionfile [missionfile ...]
+ 
+ Assorted mission tools for digital combat simulator.
+ 
+ positional arguments:
+   missionfile           mission file to work on
+ 
+ optional arguments:
+   -h, --help            show this help message and exit
+   -D [DUMP_MISSION], --dump-mission [DUMP_MISSION]
+                         Dumps the mission LUA of the first missionfile out to
+                         the specified file, or use "-" for STDOUT. This will
+                         prevent any other action from being taken!
+   -M, --max-ids         Displays the current maximum ids for groups and units.
+   -F, --filter-nonclients
+                         Filters out non-client units by removing them. Empty
+                         groups will also be removed.
+   -C, --compress-ids    Compresses the unit- and groupIds in the mission as to
+                         avoid their values growing too large
+   -F1, --fix-eplrs      Fixes incorrect links to groups for EPLRS waypoint
+                         settings. Will only work if used together with -C
+   -v, --verbose         Give more feedback on what is being worked on
 
 ```
 
@@ -39,3 +43,5 @@ However scripts that reference groups or units by ID will not be automatically r
 If wished for, wrong EPLRS pointers can also be corrected again. **(Warning: This seems highly experimental and not necessary or actually useful!)**
 
 The tool can also easily dump a mission as LUA file from inside the MIZ, savind just a few seconds of doing it manually.
+
+You can also strip non-client units from either missions or templates. (This is useful for when you want to import squadron templates into a mission that might still contain leftover non-client stuff.)
