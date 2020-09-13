@@ -104,7 +104,7 @@ def compressIds(mission):
                                                 print("group {0} has ActivateICLS task for unit {1} not part of group".format(group["groupId"], task["params"]["action"]["params"]["unitId"]))
                                         if task["params"]["action"]["id"] == 'ActivateBeacon':
                                             if not task["params"]["action"]["params"]["unitId"] in unitsingroup:
-                                                print("group {0} has ActivateICLS task for unit {1} not part of group".format(group["groupId"], task["params"]["action"]["params"]["unitId"]))
+                                                print("group {0} has ActivateBeacon task for unit {1} not part of group".format(group["groupId"], task["params"]["action"]["params"]["unitId"]))
                                         if task["params"]["action"]["id"] == 'EPLRS':
                                             if not group["groupId"] == task["params"]["action"]["params"]["groupId"]:
                                                 print("group {0} has EPLRS task for group {1} which is a foreign group".format(group["groupId"], task["params"]["action"]["params"]["groupId"]))
@@ -134,7 +134,7 @@ def compressIds(mission):
                             unit["unitId"] = unitids[unit["unitId"]]
 
                     for point_idx, point in group["route"]["points"].items():
-                        if "linkUnit" in point:
+                        if "linkUnit" in point and not unitids[point["linkUnit"]] == point["linkUnit"]:
                             if point["linkUnit"] in unitids:
                                 print("group {0} has a waypoint linked to a unit {1} that was rewritten to {2}".format(
                                     group["groupId"],
@@ -148,7 +148,7 @@ def compressIds(mission):
                                     group["groupId"],
                                     point["linkUnit"]
                                 ))
-                        if "helipadId" in point:
+                        if "helipadId" in point and not unitids[point["linkUnit"]] == point["helipadId"]:
                             if point["helipadId"] in unitids:
                                 print("group {0} has a waypoint linked to a helipad unit {1} that was rewritten to {2}".format(
                                     group["groupId"],
