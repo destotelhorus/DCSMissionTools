@@ -63,6 +63,10 @@ class STMFile(object):
             return {"lat": 36.145615, "lon": -115.187618}
         elif self.getTheatre() == 'Normandy':
             return {"lat": 49.183336, "lon": -0.365908}
+        elif self.getTheatre() == 'Syria':
+            return {"lat": 35.140901, "lon": 36.051701}
+        elif self.getTheatre() == 'TheChannel':
+            return {"lat": 50.945076, "lon": -0.365908}
         else:
             return None
 
