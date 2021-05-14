@@ -1,6 +1,6 @@
 import os
 from STMFile import STMFile
-from MIZFile import MIZFile
+from pyMIZFile.MIZFile import MIZFile
 import argparse
 
 parser = argparse.ArgumentParser(description='Assorted mission tools for digital combat simulator.')
